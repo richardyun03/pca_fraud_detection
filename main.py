@@ -7,6 +7,8 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+from baseline_logistic import *
+from autoencoder import *
 
 # Install dependencies as needed:
 # pip install kagglehub[pandas-datasets]
@@ -50,7 +52,7 @@ X_test_scaled = scaler.transform(X_test)
 
 # 5. Apply PCA
 # You can choose a threshold for explained variance. In this case, we'll try to retain 95% variance.
-pca = PCA(n_components=0.95, random_state=42)  # alternatively, specify an integer number of components.
+pca = PCA(n_components=1, random_state=42)  # alternatively, specify an integer number of components.
 X_train_pca = pca.fit_transform(X_train_scaled)
 X_test_pca = pca.transform(X_test_scaled)
 
@@ -66,40 +68,140 @@ plt.title('Explained Variance by PCA Components')
 plt.grid(True)
 plt.show()
 
-# 6. Train a Logistic Regression classifier on the PCA-transformed data
-# For imbalanced data, it can be useful to set class_weight parameter to "balanced"
-clf = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)
-clf.fit(X_train_pca, y_train)
+fpr_pca_log, tpr_pca_log, y_pred_pca_log, auc_pca_log, clf_pca_log = baseline_logistic(X_train_pca, X_test_pca, y_train, y_test) #PCA Logisitc Classifier
 
-# 7. Evaluate the model
-y_pred = clf.predict(X_test_pca)
+fpr_log, tpr_log, y_pred_log, auc_log, clf_log = baseline_logistic(X_train_scaled, X_test_scaled, y_train, y_test)
 
-y_proba = clf.predict_proba(X_test_pca)[:, 1]
-fpr, tpr, _ = roc_curve(y_test, y_proba)
-auc = roc_auc_score(y_test, y_proba)
+fpr_autoencoder_pca, tpr_autoencoder_pca, y_pred_autoencoder_pca, auc_autoencoder_pca, clf_autoencoder_pca = autoencoder_classifier(X_train_pca, X_test_pca, y_train, y_test)
+
+fpr_autoencoder, tpr_autoencoder, y_pred_autoencoder, auc_autoencoder, clf_autoencoder = autoencoder_classifier(X_train_scaled, X_test_scaled, y_train, y_test)
 
 
 
 
-plt.figure()
-plt.plot(fpr, tpr)
-plt.plot([0, 1], [0, 1], linestyle='--')  # chance line
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title(f'ROC Curve (AUC = {auc:.3f})')
-plt.grid(True)
-plt.show()
 
-# 2. Confusion matrix
-cm = confusion_matrix(y_test, y_pred)
-disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-plt.figure()
-disp.plot(values_format='d')  # integer format
-plt.title('Confusion Matrix')
-plt.show()
 
-print("Confusion Matrix:")
-print(confusion_matrix(y_test, y_pred))
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
-print("\nROC AUC Score:", roc_auc_score(y_test, clf.predict_proba(X_test_pca)[:, 1]))
+
+explained_variance = pca.explained_variance_ratio_
+
+# Scree Plot
+# plt.figure(figsize=(8, 5))
+# plt.plot(np.arange(1, len(explained_variance) + 1), explained_variance, 'o-', linewidth=2)
+# plt.title('Scree Plot')
+# plt.xlabel('Principal Component')
+# plt.ylabel('Explained Variance Ratio')
+# plt.grid(True)
+# plt.show()
+
+
+
+
+
+
+# plt.figure()
+# plt.plot(fpr_pca_log, tpr_pca_log)
+# plt.plot([0, 1], [0, 1], linestyle='--')  # chance line
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title(f'ROC Curve (AUC = {auc_pca_log:.3f})')
+# plt.grid(True)
+# plt.show()
+
+# # 2. Confusion matrix
+# cm = confusion_matrix(y_test, y_pred_pca_log)
+# disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+# plt.figure()
+# disp.plot(values_format='d')  # integer format
+# plt.title('Confusion Matrix')
+# plt.show()
+
+# print("Confusion Matrix:")
+# print(confusion_matrix(y_test, y_pred_pca_log))
+# print("\nClassification Report:")
+# print(classification_report(y_test, y_pred_pca_log))
+# print("\nROC AUC Score:", roc_auc_score(y_test, clf_pca_log.predict_proba(X_test_pca)[:, 1]))
+
+
+
+
+
+
+
+# plt.figure()
+# plt.plot(fpr_log, tpr_log)
+# plt.plot([0, 1], [0, 1], linestyle='--')  # chance line
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title(f'ROC Curve (AUC = {auc_log:.3f})')
+# plt.grid(True)
+# plt.show()
+
+# # 2. Confusion matrix
+# cm_log = confusion_matrix(y_test, y_pred_log)
+# disp_log = ConfusionMatrixDisplay(confusion_matrix=cm_log)
+# plt.figure()
+# disp_log.plot(values_format='d')  # integer format
+# plt.title('Confusion Matrix')
+# plt.show()
+
+# print("Confusion Matrix:")
+# print(confusion_matrix(y_test, y_pred_log))
+# print("\nClassification Report:")
+# print(classification_report(y_test, y_pred_log))
+# print("\nROC AUC Score:", roc_auc_score(y_test, clf_log.predict_proba(X_test_scaled)[:, 1]))
+
+
+
+
+
+# plt.figure()
+# plt.plot(fpr_autoencoder_pca, tpr_autoencoder_pca)
+# plt.plot([0, 1], [0, 1], linestyle='--')  # chance line
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title(f'ROC Curve (AUC = {auc_autoencoder_pca:.3f})')
+# plt.grid(True)
+# plt.show()
+
+# # 2. Confusion matrix
+# cm_autoencoder_pca = confusion_matrix(y_test, y_pred_autoencoder_pca)
+# disp = ConfusionMatrixDisplay(confusion_matrix=cm_autoencoder_pca)
+# plt.figure()
+# disp.plot(values_format='d')  # integer format
+# plt.title('Confusion Matrix')
+# plt.show()
+
+# print("Confusion Matrix:")
+# print(confusion_matrix(y_test, y_pred_autoencoder_pca))
+# print("\nClassification Report:")
+# print(classification_report(y_test, y_pred_autoencoder_pca))
+# print("\nROC AUC Score:", roc_auc_score(y_test, clf_autoencoder_pca.predict_proba(X_test_pca)[:, 1]))
+
+
+
+
+
+
+
+# plt.figure()
+# plt.plot(fpr_autoencoder, tpr_autoencoder)
+# plt.plot([0, 1], [0, 1], linestyle='--')  # chance line
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title(f'ROC Curve (AUC = {auc_autoencoder:.3f})')
+# plt.grid(True)
+# plt.show()
+
+# # 2. Confusion matrix
+# cm_autoencoder = confusion_matrix(y_test, y_pred_autoencoder)
+# disp_log = ConfusionMatrixDisplay(confusion_matrix=cm_autoencoder)
+# plt.figure()
+# disp_log.plot(values_format='d')  # integer format
+# plt.title('Confusion Matrix')
+# plt.show()
+
+# print("Confusion Matrix:")
+# print(confusion_matrix(y_test, y_pred_autoencoder))
+# print("\nClassification Report:")
+# print(classification_report(y_test, y_pred_autoencoder))
+# print("\nROC AUC Score:", roc_auc_score(y_test, clf_autoencoder.predict_proba(X_test_scaled)[:, 1]))
